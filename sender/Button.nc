@@ -4,15 +4,15 @@ interface Button {
   command void stop();
   event void stopDone(error_t error);
   command void pinvalueA();
-  event void pinvalueADone(bool pressed);
+  event void pinvalueADone(bool unpressed);
   command void pinvalueB();
-  event void pinvalueBDone(bool pressed);
+  event void pinvalueBDone(bool unpressed);
   command void pinvalueC();
-  event void pinvalueCDone(bool pressed);
+  event void pinvalueCDone(bool unpressed);
   command void pinvalueD();
-  event void pinvalueDDone(bool pressed);
+  event void pinvalueDDone(bool unpressed);
   command void pinvalueE();
-  event void pinvalueEDone(bool pressed);
+  event void pinvalueEDone(bool unpressed);
   command void pinvalueF();
-  event void pinvalueFDone(bool pressed);
+  event void pinvalueFDone(bool unpressed);
 }

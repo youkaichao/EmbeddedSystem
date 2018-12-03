@@ -3,6 +3,7 @@
 
 module CarP{
     provides interface Car;
+    uses interface Leds;
     uses interface Resource;
     uses interface HplMsp430Usart;
     uses interface HplMsp430UsartInterrupts;
@@ -10,12 +11,13 @@ module CarP{
 
 implementation {
   Message* global_pkg;
-  uint8_t forward_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
-  uint8_t angle1_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
-  uint8_t angle2_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
-  uint8_t angle3_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
-  uint8_t* all_commands[4] = {forward_commands, angle1_commands, angle2_commands, angle3_commands}; 
+  uint8_t forward_commands[8] = {1, 2, 0, 2, 0, 0xff, 0xff, 0};
+  uint8_t angle1_commands[8] = {1, 2, 1, 4000 / 256, 4000 % 256, 0xff, 0xff, 0};
+  uint8_t angle2_commands[8] = {1, 2, 7, 4000 / 256, 4000 % 256, 0xff, 0xff, 0};
+  uint8_t angle3_commands[8] = {1, 2, 8, 4000 / 256, 4000 % 256, 0xff, 0xff, 0};
+  uint8_t* current_command; 
   uint8_t current_pos;
+  int8_t x_status, y_status;
   msp430_uctl_t u0ctrl; 
   msp430_uart_union_config_t config = {
     {
@@ -59,23 +61,88 @@ implementation {
   }
   command void Car.prepareCommand()
   {
-    
+      if(global_pkg->y <=500)
+      {
+        y_status = 1;
+      }else if(global_pkg->y >= 1000 && global_pkg->y <= 3000)
+      {
+        y_status = 0;
+      }else if(global_pkg->y >= 4000)
+      {
+        y_status = -1;
+      }
+      
+      if(global_pkg->x <=500)
+      {
+        x_status = 1;
+      }else if(global_pkg->x >= 1000 && global_pkg->x <= 3000)
+      {
+        x_status = 0;
+      }else if(global_pkg->x >= 4000)
+      {
+        x_status = -1;
+      }
+      
+      if(x_status == -1)
+      {
+        call Leds.led0Toggle();
+      }
+      if(x_status == 0)
+      {
+        call Leds.led1Toggle();
+      }
+      if(x_status == 1)
+      {
+        call Leds.led2Toggle();
+      }
+      
+      if(y_status == 0 && x_status == 0)
+      {
+        forward_commands[2] = 6;
+      }else if(y_status == 0 && x_status == -1)
+      {
+        forward_commands[2] = 4;
+      }else if(y_status == 0 && x_status == 1)
+      {
+        forward_commands[2] = 5;
+      }else if(y_status == 1 && x_status == 0)
+      {
+        forward_commands[2] = 2;
+      }else if(y_status == -1 && x_status == 0)
+      {
+        forward_commands[2] = 3;
+      }else{
+        forward_commands[2] = 6;
+      }
+
+      if(global_pkg->buttons & 4)
+      {
+        current_command = angle1_commands;
+      }else if(global_pkg->buttons & 16){
+        current_command = angle2_commands;
+      }else if(global_pkg->buttons & 32){
+        current_command = angle3_commands;
+      }else{
+        current_command = forward_commands;
+      }
   }
   command void Car.sendCommand()
   {
-    atomic{
-      if(current_pos <= 31)
+    while(1)
+    {
+      if(current_pos >= 8)
       {
-        call HplMsp430Usart.tx(all_commands[current_pos >> 3][current_pos & 7]);
+        break;
+      }
+      if(call HplMsp430Usart.isTxEmpty())
+      {
+        call HplMsp430Usart.tx(current_command[current_pos]);
+        current_pos += 1;
       }
     }
   }
   async event void HplMsp430UsartInterrupts.txDone()
   {
-    atomic{
-      current_pos += 1;
-    }
-    call Car.sendCommand();
   }
   async event void HplMsp430UsartInterrupts.rxDone(uint8_t data)
   {

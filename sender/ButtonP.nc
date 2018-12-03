@@ -29,27 +29,27 @@ implementation {
   command void Button.stop() {
   }
   command void Button.pinvalueA() {
-    bool pressed = call IOA.get();
-    signal Button.pinvalueADone(pressed);
+    bool unpressed = call IOA.get();
+    signal Button.pinvalueADone(unpressed);
   }
   command void Button.pinvalueB() {
-    bool pressed = call IOB.get();
-    signal Button.pinvalueBDone(pressed);
+    bool unpressed = call IOB.get();
+    signal Button.pinvalueBDone(unpressed);
   }
   command void Button.pinvalueC() {
-    bool pressed = call IOC.get();
-    signal Button.pinvalueCDone(pressed);
+    bool unpressed = call IOC.get();
+    signal Button.pinvalueCDone(unpressed);
   }
   command void Button.pinvalueD() {
-    bool pressed = call IOD.get();
-    signal Button.pinvalueDDone(pressed);
+    bool unpressed = call IOD.get();
+    signal Button.pinvalueDDone(unpressed);
   }
   command void Button.pinvalueE() {
-    bool pressed = call IOE.get();
-    signal Button.pinvalueEDone(pressed);
+    bool unpressed = call IOE.get();
+    signal Button.pinvalueEDone(unpressed);
   }
   command void Button.pinvalueF() {
-    bool pressed = call IOF.get();
-    signal Button.pinvalueFDone(pressed);
+    bool unpressed = call IOF.get();
+    signal Button.pinvalueFDone(unpressed);
   }
 }

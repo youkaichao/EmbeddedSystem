@@ -4,7 +4,6 @@
 module RadioP {
   uses interface Car;
   uses interface Boot;
-  uses interface Leds;
   uses interface Timer<TMilli> as Timer;
   uses interface Receive;
   uses interface SplitControl as AMControl;
@@ -31,15 +30,6 @@ implementation {
       if(pkt->key != SECRET_KEY)
       {// maybe package of someone else
         return msg;
-      }
-      call Leds.led0Toggle();
-      if((pkt->buttons >> 6) & 1)
-      {
-        call Leds.led1Toggle();
-      }
-      if((pkt->buttons >> 7) & 1)
-      {
-        call Leds.led2Toggle();
       }
       call Car.move(pkt);
     }

@@ -6,7 +6,6 @@ configuration RadioC {
 implementation {
   components CarC;
   components MainC;
-  components LedsC;
   components RadioP;
   components ActiveMessageC;
   components new TimerMilliC() as Timer;
@@ -14,7 +13,6 @@ implementation {
 
   RadioP.Car -> CarC;
   RadioP.Boot -> MainC;
-  RadioP.Leds -> LedsC;
   RadioP.Timer -> Timer;
   RadioP.AMControl -> ActiveMessageC;
   RadioP.Receive -> AMReceiverC;

@@ -44,7 +44,11 @@ implementation {
     }
   }
   event void Timer.fired() {
-    call Button.pinvalueA();
+    if(!busy)
+    {
+      buttons = 0;
+      call Button.pinvalueA();
+    }
   }
   event void AMSend.sendDone(message_t* msg, error_t err) {
     if (&pkt == msg) {
@@ -53,28 +57,28 @@ implementation {
   }
   
   //=================================== button press function ===========================================
-  event void Button.pinvalueADone(bool pressed){
-    buttons &= (pressed << 0);
+  event void Button.pinvalueADone(bool unpressed){
+    buttons |= ((unpressed ? 0 : 1) << 0);
     call Button.pinvalueB();
   }
-  event void Button.pinvalueBDone(bool pressed){
-    buttons &= (pressed << 1);
+  event void Button.pinvalueBDone(bool unpressed){
+    buttons |= ((unpressed ? 0 : 1) << 1);
     call Button.pinvalueC();
   }
-  event void Button.pinvalueCDone(bool pressed){
-    buttons &= (pressed << 2);
+  event void Button.pinvalueCDone(bool unpressed){
+    buttons |= ((unpressed ? 0 : 1) << 2);
     call Button.pinvalueD();
   }
-  event void Button.pinvalueDDone(bool pressed){
-    buttons &= (pressed << 3);
+  event void Button.pinvalueDDone(bool unpressed){
+    buttons |= ((unpressed ? 0 : 1) << 3);
     call Button.pinvalueE();
   }
-  event void Button.pinvalueEDone(bool pressed){
-    buttons &= (pressed << 4);
+  event void Button.pinvalueEDone(bool unpressed){
+    buttons |= ((unpressed ? 0 : 1) << 4);
     call Button.pinvalueF();
   }
-  event void Button.pinvalueFDone(bool pressed){
-    buttons &= (pressed << 5);
+  event void Button.pinvalueFDone(bool unpressed){
+    buttons |= ((unpressed ? 0 : 1) << 5);
     call JSX.read();
   }
   
@@ -104,20 +108,17 @@ implementation {
       msg->y = y;
       msg->buttons = buttons;
       msg->buttons |= (counter & 3) << 6;
-      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(Message)) == SUCCESS) {
-        busy = TRUE;
-      }
-      if(counter & 1)
-      {
-        call Leds.led0Toggle();
-      }
-      if(counter & 2)
-      {
+      call Leds.led0On();
+      if(msg->buttons & 4)
+      {// C
         call Leds.led1Toggle();
       }
-      if(counter & 4)
-      {
+      if(msg->buttons & 16)
+      {// E
         call Leds.led2Toggle();
+      }
+      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(Message)) == SUCCESS) {
+        busy = TRUE;
       }
     }
   }
