@@ -10,7 +10,11 @@ module CarP{
 
 implementation {
   Message* global_pkg;
-  uint8_t commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
+  uint8_t forward_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
+  uint8_t angle1_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
+  uint8_t angle2_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
+  uint8_t angle3_commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
+  uint8_t* all_commands[4] = {forward_commands, angle1_commands, angle2_commands, angle3_commands}; 
   uint8_t current_pos;
   msp430_uctl_t u0ctrl; 
   msp430_uart_union_config_t config = {
@@ -45,11 +49,7 @@ implementation {
   event void Resource.granted(){
     call HplMsp430Usart.setModeUart(&config);
     call HplMsp430Usart.enableUart();
-    atomic {
-      u0ctrl = call HplMsp430Usart.getUctl();
-      u0ctrl.sync = 0;
-      call HplMsp430Usart.setUctl(u0ctrl);
-    }
+    atomic {U0CTL &= ~SYNC;}
     call Car.prepareCommand();
     atomic{
       current_pos = 0;
@@ -64,9 +64,9 @@ implementation {
   command void Car.sendCommand()
   {
     atomic{
-      if(current_pos <= 7)
+      if(current_pos <= 31)
       {
-        call HplMsp430Usart.tx(commands[current_pos]);
+        call HplMsp430Usart.tx(all_commands[current_pos >> 3][current_pos & 7]);
       }
     }
   }
