@@ -41,6 +41,7 @@ implementation {
       {
         call Leds.led2Toggle();
       }
+      call Car.move(pkt);
     }
     return msg;
   }

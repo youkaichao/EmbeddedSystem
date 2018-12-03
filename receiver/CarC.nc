@@ -1,3 +1,4 @@
+#include "../include/Radio.h"
 configuration CarC{
   provides interface Car;
 }
@@ -10,4 +11,5 @@ implementation{
   Car = CarP.Car;
   CarP.Resource -> Uart.Resource;
   CarP.HplMsp430Usart -> Usart.HplMsp430Usart;
+  CarP.HplMsp430UsartInterrupts -> Usart.HplMsp430UsartInterrupts;
 }

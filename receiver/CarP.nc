@@ -1,12 +1,18 @@
 #include <msp430usart.h>
+#include "../include/Radio.h"
 
 module CarP{
     provides interface Car;
     uses interface Resource;
     uses interface HplMsp430Usart;
+    uses interface HplMsp430UsartInterrupts;
 }
 
 implementation {
+  Message* global_pkg;
+  uint8_t commands[8] = {1, 2, 0, 0, 0, 0xff, 0xff, 0};
+  uint8_t current_pos;
+  msp430_uctl_t u0ctrl; 
   msp430_uart_union_config_t config = {
     {
       utxe: 1,
@@ -28,7 +34,51 @@ implementation {
       urxe: 1
     }
   };
+  command void Car.move(Message* pkt){
+    error_t output = call Resource.request();
+    // if ``output != SUCCESS``, we have already request it. donot change global_pkg.
+    if(output == SUCCESS)
+    {
+      global_pkg = pkt;
+    }
+  }
   event void Resource.granted(){
+    call HplMsp430Usart.setModeUart(&config);
+    call HplMsp430Usart.enableUart();
+    atomic {
+      u0ctrl = call HplMsp430Usart.getUctl();
+      u0ctrl.sync = 0;
+      call HplMsp430Usart.setUctl(u0ctrl);
+    }
+    call Car.prepareCommand();
+    atomic{
+      current_pos = 0;
+    }
+    call Car.sendCommand();
+    call Resource.release();
+  }
+  command void Car.prepareCommand()
+  {
+    
+  }
+  command void Car.sendCommand()
+  {
+    atomic{
+      if(current_pos <= 7)
+      {
+        call HplMsp430Usart.tx(commands[current_pos]);
+      }
+    }
+  }
+  async event void HplMsp430UsartInterrupts.txDone()
+  {
+    atomic{
+      current_pos += 1;
+    }
+    call Car.sendCommand();
+  }
+  async event void HplMsp430UsartInterrupts.rxDone(uint8_t data)
+  {
   }
   command error_t Car.turn(uint16_t value){
   }
@@ -42,4 +92,5 @@ implementation {
   }
   command error_t Car.pause(){
   }
+
 }
