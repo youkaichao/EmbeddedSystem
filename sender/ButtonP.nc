@@ -24,20 +24,32 @@ implementation {
     call IOD.makeInput();
     call IOE.makeInput();
     call IOF.makeInput();
-    signal Button.startDone();
+    signal Button.startDone(SUCCESS);
   }
   command void Button.stop() {
   }
   command void Button.pinvalueA() {
+    bool pressed = call IOA.get();
+    signal Button.pinvalueADone(pressed);
   }
   command void Button.pinvalueB() {
+    bool pressed = call IOB.get();
+    signal Button.pinvalueBDone(pressed);
   }
   command void Button.pinvalueC() {
+    bool pressed = call IOC.get();
+    signal Button.pinvalueCDone(pressed);
   }
   command void Button.pinvalueD() {
+    bool pressed = call IOD.get();
+    signal Button.pinvalueDDone(pressed);
   }
   command void Button.pinvalueE() {
+    bool pressed = call IOE.get();
+    signal Button.pinvalueEDone(pressed);
   }
   command void Button.pinvalueF() {
+    bool pressed = call IOF.get();
+    signal Button.pinvalueFDone(pressed);
   }
 }

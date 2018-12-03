@@ -1,5 +1,5 @@
 #include <Timer.h>
-#include "Radio.h"
+#include "../include/Radio.h"
 
 module RadioP {
   uses interface Boot;
@@ -14,11 +14,26 @@ module RadioP {
   uses interface Read<uint16_t> as JSY;
 }
 implementation {
+  //=================================== global variables ===========================================
   uint16_t counter;
+  uint16_t x;
+  uint16_t y;
+  uint8_t buttons;
   message_t pkt;
   bool busy = FALSE;
+  
+  //=================================== boot code: start button, radio and timer ===========================================
   event void Boot.booted() {
-    call AMControl.start();
+    call Button.start();
+  }
+  event void Button.startDone(error_t error){
+    if (error == SUCCESS) {
+      buttons = 0;
+      call AMControl.start();
+    }
+    else{
+      call Button.start();
+    }
   }
   event void AMControl.startDone(error_t err) {
     if (err == SUCCESS) {
@@ -28,45 +43,88 @@ implementation {
       call AMControl.start();
     }
   }
-  event void AMControl.stopDone(error_t err) {
-  }
   event void Timer.fired() {
-    counter++;
-    if (!busy) {
-      Message* msg = (Message*)(call Packet.getPayload(&pkt, sizeof(Message)));
-      if (msg == NULL) {
-      	return;
-      }
-      msg->nodeid = TOS_NODE_ID;
-      msg->counter = counter;
-      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(Message)) == SUCCESS) {
-        busy = TRUE;
-      }
-    }
+    call Button.pinvalueA();
   }
   event void AMSend.sendDone(message_t* msg, error_t err) {
     if (&pkt == msg) {
       busy = FALSE;
     }
   }
-  event void Button.startDone(){
+  
+  //=================================== button press function ===========================================
+  event void Button.pinvalueADone(bool pressed){
+    buttons &= (pressed << 0);
+    call Button.pinvalueB();
   }
-  event void Button.stopDone(){
+  event void Button.pinvalueBDone(bool pressed){
+    buttons &= (pressed << 1);
+    call Button.pinvalueC();
   }
-  event void Button.pinvalueADone(){
+  event void Button.pinvalueCDone(bool pressed){
+    buttons &= (pressed << 2);
+    call Button.pinvalueD();
   }
-  event void Button.pinvalueBDone(){
+  event void Button.pinvalueDDone(bool pressed){
+    buttons &= (pressed << 3);
+    call Button.pinvalueE();
   }
-  event void Button.pinvalueCDone(){
+  event void Button.pinvalueEDone(bool pressed){
+    buttons &= (pressed << 4);
+    call Button.pinvalueF();
   }
-  event void Button.pinvalueDDone(){
+  event void Button.pinvalueFDone(bool pressed){
+    buttons &= (pressed << 5);
+    call JSX.read();
   }
-  event void Button.pinvalueEDone(){
-  }
-  event void Button.pinvalueFDone(){
-  }
+  
+  //=================================== joystick function ===========================================
   event void JSX.readDone(error_t result, uint16_t val){
+    if (result == SUCCESS) {
+      x = val;
+    }else{
+      x = 0;
+    }
+    call JSY.read();
   }
   event void JSY.readDone(error_t result, uint16_t val){
+    if (result == SUCCESS) {
+      y = val;
+    }else{
+      y = 0;
+    }
+    counter++;
+    if (!busy) {
+      Message* msg = (Message*)(call Packet.getPayload(&pkt, sizeof(Message)));
+      if (msg == NULL) {
+        return;
+      }
+      msg->key = SECRET_KEY;
+      msg->x = x;
+      msg->y = y;
+      msg->buttons = buttons;
+      msg->buttons |= (counter & 3) << 6;
+      if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(Message)) == SUCCESS) {
+        busy = TRUE;
+      }
+      if(counter & 1)
+      {
+        call Leds.led0Toggle();
+      }
+      if(counter & 2)
+      {
+        call Leds.led1Toggle();
+      }
+      if(counter & 4)
+      {
+        call Leds.led2Toggle();
+      }
+    }
+  }
+  
+  //=================================== useless function ===========================================
+  event void Button.stopDone(error_t error){
+  }
+  event void AMControl.stopDone(error_t err) {
   }
 }

@@ -1,5 +1,5 @@
 #include <Timer.h>
-#include "Radio.h"
+#include "../include/Radio.h"
 
 configuration RadioC {
 }
