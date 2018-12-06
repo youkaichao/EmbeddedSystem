@@ -13,5 +13,4 @@ implementation{
   CarP.Leds -> LedsC;
   CarP.Resource -> Uart.Resource;
   CarP.HplMsp430Usart -> Usart.HplMsp430Usart;
-  CarP.HplMsp430UsartInterrupts -> Usart.HplMsp430UsartInterrupts;
 }

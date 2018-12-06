@@ -6,7 +6,7 @@ module CarP{
     uses interface Leds;
     uses interface Resource;
     uses interface HplMsp430Usart;
-    uses interface HplMsp430UsartInterrupts;
+
 }
 
 implementation {
@@ -140,12 +140,6 @@ implementation {
         current_pos += 1;
       }
     }
-  }
-  async event void HplMsp430UsartInterrupts.txDone()
-  {
-  }
-  async event void HplMsp430UsartInterrupts.rxDone(uint8_t data)
-  {
   }
   command error_t Car.turn(uint16_t value){
   }
