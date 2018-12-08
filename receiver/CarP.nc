@@ -12,11 +12,13 @@ module CarP{
 implementation {
   Message* global_pkg;
   uint8_t forward_commands[8] = {1, 2, 0, 2, 0, 0xff, 0xff, 0};
-  uint8_t angle1_commands[8] = {1, 2, 1, 4000 / 256, 4000 % 256, 0xff, 0xff, 0};
-  uint8_t angle2_commands[8] = {1, 2, 7, 4000 / 256, 4000 % 256, 0xff, 0xff, 0};
-  uint8_t angle3_commands[8] = {1, 2, 8, 4000 / 256, 4000 % 256, 0xff, 0xff, 0};
+  uint8_t angle1_commands[8] = {1, 2, 1, 0, 0, 0xff, 0xff, 0};
+  uint8_t angle2_commands[8] = {1, 2, 7, 0, 0, 0xff, 0xff, 0};
+  uint8_t angle3_commands[8] = {1, 2, 8, 0, 0, 0xff, 0xff, 0};
   uint8_t* current_command; 
   uint8_t current_pos;
+  uint16_t steer1 = 1800, steer2 = 1800, steer3 = 1800, *current_steer;
+  bool turn_reverse = FALSE;
   int8_t x_status, y_status;
   msp430_uctl_t u0ctrl; 
   msp430_uart_union_config_t config = {
@@ -115,15 +117,61 @@ implementation {
         forward_commands[2] = 6;
       }
 
-      if(global_pkg->buttons & 4)
-      {
+
+      if(global_pkg->buttons & 1)
+      {// button A, steer1 turn
         current_command = angle1_commands;
-      }else if(global_pkg->buttons & 16){
+        current_steer = &steer1;
+        turn_reverse = FALSE;
+      }else if(global_pkg->buttons & 2)
+      {// button B, steer1 turn reversely
+        current_command = angle1_commands;
+        current_steer = &steer1;
+        turn_reverse = TRUE;
+      }else if(global_pkg->buttons & 4)
+      {// button C, steer2 turn
         current_command = angle2_commands;
-      }else if(global_pkg->buttons & 32){
+        current_steer = &steer2;
+        turn_reverse = FALSE;
+      }else if(global_pkg->buttons & 8)
+      {// button D, steer2 turn reversely
+        current_command = angle2_commands;
+        current_steer = &steer2;
+        turn_reverse = TRUE;
+      }else if(global_pkg->buttons & 16)
+      {// button E, steer3 turn
         current_command = angle3_commands;
+        current_steer = &steer3;
+        turn_reverse = FALSE;
+      }else if(global_pkg->buttons & 32)
+      {// button F, steer3 turn reversely
+        current_command = angle3_commands;
+        current_steer = &steer3;
+        turn_reverse = TRUE;
       }else{
         current_command = forward_commands;
+      }
+      if(current_command != forward_commands)
+      {
+        if(turn_reverse)
+        {
+          if(*current_steer <= 1500)
+          {
+            *current_steer = 1500;
+          }else{
+            *current_steer -= 100;
+          }
+        }else
+        {
+          if(*current_steer >= 5000)
+          {
+            *current_steer = 5000;
+          }else{
+            *current_steer += 100;
+          }
+        }
+        current_command[3] = *current_steer / 256;
+        current_command[4] = *current_steer % 256;
       }
   }
   command void Car.sendCommand()
@@ -141,17 +189,4 @@ implementation {
       }
     }
   }
-  command error_t Car.turn(uint16_t value){
-  }
-  command error_t Car.forward(uint16_t value){
-  }
-  command error_t Car.back(uint16_t value){
-  }
-  command error_t Car.left(uint16_t value){
-  }
-  command error_t Car.right(uint16_t value){
-  }
-  command error_t Car.pause(){
-  }
-
 }
