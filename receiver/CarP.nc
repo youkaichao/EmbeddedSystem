@@ -180,6 +180,7 @@ implementation {
     {
       if(current_pos >= 8)
       {
+        while(!(call HplMsp430Usart.isTxEmpty()));
         break;
       }
       if(call HplMsp430Usart.isTxEmpty())
